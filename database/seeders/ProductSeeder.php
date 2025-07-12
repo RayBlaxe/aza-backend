@@ -45,7 +45,7 @@ class ProductSeeder extends Seeder
                     'price' => 750000,
                     'sku' => 'NIKE-PL-001',
                     'weight' => 0.45,
-                    'images' => ['nike-football-1.jpg', 'nike-football-2.jpg'],
+                    'images' => ['http://localhost:8000/images/products/nike-football-1.jpg', 'http://localhost:8000/images/products/nike-football-2.jpg'],
                 ],
                 [
                     'name' => 'Adidas Predator Football Boots',
@@ -53,7 +53,7 @@ class ProductSeeder extends Seeder
                     'price' => 2500000,
                     'sku' => 'ADIDAS-PRED-001',
                     'weight' => 0.8,
-                    'images' => ['adidas-boots-1.jpg', 'adidas-boots-2.jpg'],
+                    'images' => ['http://localhost:8000/images/products/adidas-boots-1.jpg', 'http://localhost:8000/images/products/adidas-boots-2.jpg'],
                 ],
                 [
                     'name' => 'Manchester United Home Jersey',
@@ -61,7 +61,7 @@ class ProductSeeder extends Seeder
                     'price' => 1200000,
                     'sku' => 'MU-HOME-001',
                     'weight' => 0.25,
-                    'images' => ['mu-jersey-1.jpg', 'mu-jersey-2.jpg'],
+                    'images' => ['http://localhost:8000/images/products/mu-jersey-1.jpg'],
                 ],
                 [
                     'name' => 'Football Training Cones Set',
@@ -69,7 +69,7 @@ class ProductSeeder extends Seeder
                     'price' => 150000,
                     'sku' => 'TRAIN-CONE-001',
                     'weight' => 1.2,
-                    'images' => ['training-cones-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/training-cones-1.jpg'],
                 ],
                 [
                     'name' => 'Football Shin Guards',
@@ -77,7 +77,7 @@ class ProductSeeder extends Seeder
                     'price' => 200000,
                     'sku' => 'SHIN-GUARD-001',
                     'weight' => 0.3,
-                    'images' => ['shin-guards-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/shin-guards-1.jpg'],
                 ],
                 [
                     'name' => 'Football Goal Net',
@@ -85,7 +85,7 @@ class ProductSeeder extends Seeder
                     'price' => 300000,
                     'sku' => 'GOAL-NET-001',
                     'weight' => 2.0,
-                    'images' => ['goal-net-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/goal-net-1.jpg'],
                 ],
                 [
                     'name' => 'Football Gloves',
@@ -93,7 +93,7 @@ class ProductSeeder extends Seeder
                     'price' => 400000,
                     'sku' => 'GK-GLOVES-001',
                     'weight' => 0.4,
-                    'images' => ['gk-gloves-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/gk-gloves-1.jpg'],
                 ],
             ],
             'basketball' => [
@@ -103,7 +103,7 @@ class ProductSeeder extends Seeder
                     'price' => 800000,
                     'sku' => 'SPALDING-NBA-001',
                     'weight' => 0.6,
-                    'images' => ['spalding-ball-1.jpg', 'spalding-ball-2.jpg'],
+                    'images' => ['http://localhost:8000/images/products/spalding-ball-1.jpg', 'http://localhost:8000/images/products/spalding-ball-2.jpg'],
                 ],
                 [
                     'name' => 'Nike Air Jordan Basketball Shoes',
@@ -111,7 +111,7 @@ class ProductSeeder extends Seeder
                     'price' => 3000000,
                     'sku' => 'JORDAN-SHOE-001',
                     'weight' => 0.9,
-                    'images' => ['jordan-shoes-1.jpg', 'jordan-shoes-2.jpg'],
+                    'images' => ['http://localhost:8000/images/products/jordan-shoes-1.jpg', 'http://localhost:8000/images/products/jordan-shoes-2.jpg'],
                 ],
                 [
                     'name' => 'Lakers Home Jersey',
@@ -119,7 +119,7 @@ class ProductSeeder extends Seeder
                     'price' => 1500000,
                     'sku' => 'LAKERS-HOME-001',
                     'weight' => 0.3,
-                    'images' => ['lakers-jersey-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/lakers-jersey-1.jpg'],
                 ],
                 [
                     'name' => 'Basketball Hoop Portable',
@@ -127,7 +127,7 @@ class ProductSeeder extends Seeder
                     'price' => 2200000,
                     'sku' => 'HOOP-PORT-001',
                     'weight' => 25.0,
-                    'images' => ['portable-hoop-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/portable-hoop-1.jpg'],
                 ],
                 [
                     'name' => 'Basketball Training Rebounder',
@@ -135,7 +135,7 @@ class ProductSeeder extends Seeder
                     'price' => 800000,
                     'sku' => 'REBOUNDER-001',
                     'weight' => 5.0,
-                    'images' => ['rebounder-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/rebounder-1.jpg'],
                 ],
                 [
                     'name' => 'Basketball Shooting Sleeve',
@@ -143,7 +143,7 @@ class ProductSeeder extends Seeder
                     'price' => 150000,
                     'sku' => 'SHOOT-SLEEVE-001',
                     'weight' => 0.1,
-                    'images' => ['shooting-sleeve-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/shooting-sleeve-1.jpg'],
                 ],
                 [
                     'name' => 'Basketball Pump',
@@ -151,7 +151,7 @@ class ProductSeeder extends Seeder
                     'price' => 100000,
                     'sku' => 'BALL-PUMP-001',
                     'weight' => 0.5,
-                    'images' => ['ball-pump-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/ball-pump-1.jpg'],
                 ],
             ],
             'badminton' => [
@@ -161,7 +161,7 @@ class ProductSeeder extends Seeder
                     'price' => 2800000,
                     'sku' => 'YONEX-ARC11-001',
                     'weight' => 0.35,
-                    'images' => ['yonex-racket-1.jpg', 'yonex-racket-2.jpg'],
+                    'images' => ['http://localhost:8000/images/products/yonex-racket-1.jpg', 'http://localhost:8000/images/products/yonex-racket-2.jpg'],
                 ],
                 [
                     'name' => 'Victor Shuttlecocks',
@@ -169,7 +169,7 @@ class ProductSeeder extends Seeder
                     'price' => 200000,
                     'sku' => 'VICTOR-SHUT-001',
                     'weight' => 0.3,
-                    'images' => ['victor-shuttlecocks-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/victor-shuttlecocks-1.jpg'],
                 ],
                 [
                     'name' => 'Badminton Court Shoes',
@@ -177,7 +177,7 @@ class ProductSeeder extends Seeder
                     'price' => 1200000,
                     'sku' => 'COURT-SHOE-001',
                     'weight' => 0.8,
-                    'images' => ['court-shoes-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/court-shoes-1.jpg'],
                 ],
                 [
                     'name' => 'Badminton Racket Bag',
@@ -185,7 +185,7 @@ class ProductSeeder extends Seeder
                     'price' => 400000,
                     'sku' => 'RACKET-BAG-001',
                     'weight' => 0.8,
-                    'images' => ['racket-bag-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/racket-bag-1.jpg'],
                 ],
                 [
                     'name' => 'Badminton Net',
@@ -193,7 +193,7 @@ class ProductSeeder extends Seeder
                     'price' => 300000,
                     'sku' => 'BAD-NET-001',
                     'weight' => 1.0,
-                    'images' => ['badminton-net-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/badminton-net-1.jpg'],
                 ],
                 [
                     'name' => 'Badminton Grip Tape',
@@ -201,7 +201,7 @@ class ProductSeeder extends Seeder
                     'price' => 50000,
                     'sku' => 'GRIP-TAPE-001',
                     'weight' => 0.05,
-                    'images' => ['grip-tape-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/grip-tape-1.jpg'],
                 ],
             ],
             'running' => [
@@ -211,7 +211,7 @@ class ProductSeeder extends Seeder
                     'price' => 2200000,
                     'sku' => 'NIKE-ZOOM-001',
                     'weight' => 0.7,
-                    'images' => ['nike-running-1.jpg', 'nike-running-2.jpg'],
+                    'images' => ['http://localhost:8000/images/products/nike-running-1.jpg', 'http://localhost:8000/images/products/nike-running-2.jpg'],
                 ],
                 [
                     'name' => 'Adidas Running Shorts',
@@ -219,7 +219,7 @@ class ProductSeeder extends Seeder
                     'price' => 300000,
                     'sku' => 'ADIDAS-SHORT-001',
                     'weight' => 0.2,
-                    'images' => ['adidas-shorts-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/adidas-shorts-1.jpg'],
                 ],
                 [
                     'name' => 'Garmin GPS Running Watch',
@@ -227,7 +227,7 @@ class ProductSeeder extends Seeder
                     'price' => 4500000,
                     'sku' => 'GARMIN-GPS-001',
                     'weight' => 0.15,
-                    'images' => ['garmin-watch-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/garmin-watch-1.jpg'],
                 ],
                 [
                     'name' => 'Running Hydration Belt',
@@ -235,7 +235,7 @@ class ProductSeeder extends Seeder
                     'price' => 250000,
                     'sku' => 'HYDRO-BELT-001',
                     'weight' => 0.3,
-                    'images' => ['hydration-belt-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/hydration-belt-1.jpg'],
                 ],
                 [
                     'name' => 'Compression Running Socks',
@@ -243,7 +243,7 @@ class ProductSeeder extends Seeder
                     'price' => 150000,
                     'sku' => 'COMP-SOCK-001',
                     'weight' => 0.1,
-                    'images' => ['compression-socks-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/compression-socks-1.jpg'],
                 ],
                 [
                     'name' => 'Running Headband',
@@ -251,7 +251,7 @@ class ProductSeeder extends Seeder
                     'price' => 75000,
                     'sku' => 'RUN-HEADBAND-001',
                     'weight' => 0.05,
-                    'images' => ['headband-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/headband-1.jpg'],
                 ],
                 [
                     'name' => 'Running Armband Phone Holder',
@@ -259,7 +259,7 @@ class ProductSeeder extends Seeder
                     'price' => 120000,
                     'sku' => 'ARM-PHONE-001',
                     'weight' => 0.15,
-                    'images' => ['armband-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/armband-1.jpg'],
                 ],
             ],
             'gym-equipment' => [
@@ -269,7 +269,7 @@ class ProductSeeder extends Seeder
                     'price' => 3500000,
                     'sku' => 'DUMBBELL-SET-001',
                     'weight' => 50.0,
-                    'images' => ['dumbbell-set-1.jpg', 'dumbbell-set-2.jpg'],
+                    'images' => ['http://localhost:8000/images/products/dumbbell-set-1.jpg', 'http://localhost:8000/images/products/dumbbell-set-2.jpg'],
                 ],
                 [
                     'name' => 'Resistance Bands Set',
@@ -277,7 +277,7 @@ class ProductSeeder extends Seeder
                     'price' => 200000,
                     'sku' => 'RESIST-BAND-001',
                     'weight' => 0.8,
-                    'images' => ['resistance-bands-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/resistance-bands-1.jpg'],
                 ],
                 [
                     'name' => 'Yoga Mat Premium',
@@ -285,7 +285,7 @@ class ProductSeeder extends Seeder
                     'price' => 350000,
                     'sku' => 'YOGA-MAT-001',
                     'weight' => 1.2,
-                    'images' => ['yoga-mat-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/yoga-mat-1.jpg'],
                 ],
                 [
                     'name' => 'Pull-up Bar',
@@ -293,7 +293,7 @@ class ProductSeeder extends Seeder
                     'price' => 400000,
                     'sku' => 'PULLUP-BAR-001',
                     'weight' => 2.0,
-                    'images' => ['pullup-bar-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/pullup-bar-1.jpg'],
                 ],
                 [
                     'name' => 'Kettlebell 20kg',
@@ -301,7 +301,7 @@ class ProductSeeder extends Seeder
                     'price' => 800000,
                     'sku' => 'KETTLEBELL-20-001',
                     'weight' => 20.0,
-                    'images' => ['kettlebell-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/kettlebell-1.jpg'],
                 ],
                 [
                     'name' => 'Foam Roller',
@@ -309,7 +309,7 @@ class ProductSeeder extends Seeder
                     'price' => 200000,
                     'sku' => 'FOAM-ROLLER-001',
                     'weight' => 0.6,
-                    'images' => ['foam-roller-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/foam-roller-1.jpg'],
                 ],
                 [
                     'name' => 'Weight Bench',
@@ -317,7 +317,7 @@ class ProductSeeder extends Seeder
                     'price' => 1500000,
                     'sku' => 'WEIGHT-BENCH-001',
                     'weight' => 25.0,
-                    'images' => ['weight-bench-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/weight-bench-1.jpg'],
                 ],
             ],
             'tennis' => [
@@ -327,7 +327,7 @@ class ProductSeeder extends Seeder
                     'price' => 2500000,
                     'sku' => 'WILSON-PROSTAFF-001',
                     'weight' => 0.32,
-                    'images' => ['wilson-racket-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/wilson-racket-1.jpg'],
                 ],
                 [
                     'name' => 'Tennis Balls Set',
@@ -335,7 +335,7 @@ class ProductSeeder extends Seeder
                     'price' => 80000,
                     'sku' => 'TENNIS-BALL-001',
                     'weight' => 0.25,
-                    'images' => ['tennis-balls-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/tennis-balls-1.jpg'],
                 ],
                 [
                     'name' => 'Tennis Court Shoes',
@@ -343,7 +343,7 @@ class ProductSeeder extends Seeder
                     'price' => 1800000,
                     'sku' => 'TENNIS-SHOE-001',
                     'weight' => 0.9,
-                    'images' => ['tennis-shoes-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/tennis-shoes-1.jpg'],
                 ],
                 [
                     'name' => 'Tennis Racket Bag',
@@ -351,7 +351,7 @@ class ProductSeeder extends Seeder
                     'price' => 500000,
                     'sku' => 'TENNIS-BAG-001',
                     'weight' => 1.0,
-                    'images' => ['tennis-bag-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/tennis-bag-1.jpg'],
                 ],
                 [
                     'name' => 'Tennis String',
@@ -359,7 +359,7 @@ class ProductSeeder extends Seeder
                     'price' => 150000,
                     'sku' => 'TENNIS-STRING-001',
                     'weight' => 0.1,
-                    'images' => ['tennis-string-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/tennis-string-1.jpg'],
                 ],
                 [
                     'name' => 'Tennis Wristband',
@@ -367,7 +367,7 @@ class ProductSeeder extends Seeder
                     'price' => 50000,
                     'sku' => 'TENNIS-WRIST-001',
                     'weight' => 0.05,
-                    'images' => ['wristband-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/wristband-1.jpg'],
                 ],
             ],
             'swimming' => [
@@ -377,7 +377,7 @@ class ProductSeeder extends Seeder
                     'price' => 1200000,
                     'sku' => 'SPEEDO-COMP-001',
                     'weight' => 0.2,
-                    'images' => ['speedo-suit-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/speedo-suit-1.jpg'],
                 ],
                 [
                     'name' => 'Swimming Goggles',
@@ -385,7 +385,7 @@ class ProductSeeder extends Seeder
                     'price' => 200000,
                     'sku' => 'SWIM-GOGGLE-001',
                     'weight' => 0.1,
-                    'images' => ['goggles-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/goggles-1.jpg'],
                 ],
                 [
                     'name' => 'Swimming Cap',
@@ -393,7 +393,7 @@ class ProductSeeder extends Seeder
                     'price' => 100000,
                     'sku' => 'SWIM-CAP-001',
                     'weight' => 0.05,
-                    'images' => ['swim-cap-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/swim-cap-1.jpg'],
                 ],
                 [
                     'name' => 'Swimming Kickboard',
@@ -401,7 +401,7 @@ class ProductSeeder extends Seeder
                     'price' => 150000,
                     'sku' => 'KICKBOARD-001',
                     'weight' => 0.5,
-                    'images' => ['kickboard-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/kickboard-1.jpg'],
                 ],
                 [
                     'name' => 'Pool Fins',
@@ -409,7 +409,7 @@ class ProductSeeder extends Seeder
                     'price' => 250000,
                     'sku' => 'POOL-FINS-001',
                     'weight' => 0.8,
-                    'images' => ['pool-fins-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/pool-fins-1.jpg'],
                 ],
                 [
                     'name' => 'Waterproof Swimming Bag',
@@ -417,7 +417,7 @@ class ProductSeeder extends Seeder
                     'price' => 180000,
                     'sku' => 'WATERPROOF-BAG-001',
                     'weight' => 0.3,
-                    'images' => ['waterproof-bag-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/waterproof-bag-1.jpg'],
                 ],
             ],
             'cycling' => [
@@ -427,7 +427,7 @@ class ProductSeeder extends Seeder
                     'price' => 8500000,
                     'sku' => 'ROAD-BIKE-001',
                     'weight' => 12.0,
-                    'images' => ['road-bike-1.jpg', 'road-bike-2.jpg'],
+                    'images' => ['http://localhost:8000/images/products/road-bike-1.jpg', 'http://localhost:8000/images/products/road-bike-2.jpg'],
                 ],
                 [
                     'name' => 'Cycling Helmet',
@@ -435,7 +435,7 @@ class ProductSeeder extends Seeder
                     'price' => 400000,
                     'sku' => 'CYCLE-HELMET-001',
                     'weight' => 0.3,
-                    'images' => ['cycle-helmet-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/cycle-helmet-1.jpg'],
                 ],
                 [
                     'name' => 'Cycling Shorts',
@@ -443,7 +443,7 @@ class ProductSeeder extends Seeder
                     'price' => 300000,
                     'sku' => 'CYCLE-SHORT-001',
                     'weight' => 0.2,
-                    'images' => ['cycle-shorts-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/cycle-shorts-1.jpg'],
                 ],
                 [
                     'name' => 'Bike Lock',
@@ -451,7 +451,7 @@ class ProductSeeder extends Seeder
                     'price' => 250000,
                     'sku' => 'BIKE-LOCK-001',
                     'weight' => 1.5,
-                    'images' => ['bike-lock-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/bike-lock-1.jpg'],
                 ],
                 [
                     'name' => 'Cycling Gloves',
@@ -459,7 +459,7 @@ class ProductSeeder extends Seeder
                     'price' => 150000,
                     'sku' => 'CYCLE-GLOVE-001',
                     'weight' => 0.15,
-                    'images' => ['cycle-gloves-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/cycle-gloves-1.jpg'],
                 ],
                 [
                     'name' => 'Bike Water Bottle',
@@ -467,7 +467,7 @@ class ProductSeeder extends Seeder
                     'price' => 80000,
                     'sku' => 'BIKE-BOTTLE-001',
                     'weight' => 0.2,
-                    'images' => ['bike-bottle-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/bike-bottle-1.jpg'],
                 ],
                 [
                     'name' => 'Bike Repair Kit',
@@ -475,7 +475,7 @@ class ProductSeeder extends Seeder
                     'price' => 200000,
                     'sku' => 'BIKE-REPAIR-001',
                     'weight' => 0.8,
-                    'images' => ['bike-repair-1.jpg'],
+                    'images' => ['http://localhost:8000/images/products/bike-repair-1.jpg'],
                 ],
             ],
             default => [],
