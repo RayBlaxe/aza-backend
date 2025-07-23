@@ -1,4 +1,5 @@
 <?php
+
 // app/Http/Controllers/Api/AuthController.php
 
 namespace App\Http\Controllers\Api;
@@ -31,7 +32,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'token' => $token,
-            'message' => 'Registration successful'
+            'message' => 'Registration successful',
         ], 201);
     }
 
@@ -44,7 +45,7 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
@@ -58,7 +59,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'token' => $token,
-            'message' => 'Login successful'
+            'message' => 'Login successful',
         ]);
     }
 
@@ -67,7 +68,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Logged out successfully'
+            'message' => 'Logged out successfully',
         ]);
     }
 

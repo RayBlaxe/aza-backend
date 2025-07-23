@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\MidtransService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
@@ -27,8 +27,9 @@ class PaymentController extends Controller
 
             $order = Order::where('order_number', $orderId)->first();
 
-            if (!$order) {
+            if (! $order) {
                 Log::error("Order not found for notification: {$orderId}");
+
                 return response()->json(['success' => false, 'message' => 'Order not found.'], 404);
             }
 
@@ -36,11 +37,12 @@ class PaymentController extends Controller
                 return response()->json(['success' => true, 'message' => 'Payment already processed.']);
             }
 
-            $signatureKey = hash('sha512', $orderId . $notification['status_code'] . $order->total_amount . config('midtrans.server_key'));
-            
+            $signatureKey = hash('sha512', $orderId.$notification['status_code'].$order->total_amount.config('midtrans.server_key'));
+
             if ($signatureKey !== $notification['signature_key']) {
-                 Log::warning("Invalid signature for order {$orderId}");
-                 return response()->json(['success' => false, 'message' => 'Invalid signature.'], 403);
+                Log::warning("Invalid signature for order {$orderId}");
+
+                return response()->json(['success' => false, 'message' => 'Invalid signature.'], 403);
             }
 
             switch ($status) {
@@ -48,23 +50,23 @@ class PaymentController extends Controller
                     $order->update([
                         'payment_status' => Order::PAYMENT_STATUS_PAID,
                         'status' => Order::STATUS_PROCESSING,
-                        'payment_details' => $notification['raw_notification']
+                        'payment_details' => $notification['raw_notification'],
                     ]);
                     // Log::info("Order {$orderId} has been paid.");
                     break;
                 case 'pending':
                     $order->update([
                         'payment_status' => Order::PAYMENT_STATUS_PENDING,
-                        'payment_details' => $notification['raw_notification']
+                        'payment_details' => $notification['raw_notification'],
                     ]);
                     break;
                 case 'failed':
                 case 'expired':
                 case 'cancelled':
-                     $order->update([
+                    $order->update([
                         'payment_status' => Order::PAYMENT_STATUS_FAILED,
                         'status' => Order::STATUS_CANCELLED,
-                        'payment_details' => $notification['raw_notification']
+                        'payment_details' => $notification['raw_notification'],
                     ]);
                     $order->restoreStock();
                     // Log::info("Order {$orderId} has failed or expired.");
@@ -74,7 +76,8 @@ class PaymentController extends Controller
             return response()->json(['success' => true, 'message' => 'Notification handled.']);
 
         } catch (\Exception $e) {
-            Log::error('Midtrans Notification Error: ' . $e->getMessage());
+            Log::error('Midtrans Notification Error: '.$e->getMessage());
+
             return response()->json(['success' => false, 'message' => 'Failed to handle notification.'], 500);
         }
     }
@@ -91,7 +94,7 @@ class PaymentController extends Controller
                 'order_number' => $order->order_number,
                 'payment_status' => $order->payment_status,
                 'status' => $order->status,
-            ]
+            ],
         ]);
     }
 }

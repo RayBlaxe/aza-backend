@@ -27,7 +27,7 @@ class CategoryController extends Controller
 
     public function show(Category $category, Request $request)
     {
-        if (!$category->is_active) {
+        if (! $category->is_active) {
             return response()->json(['message' => 'Category not found'], 404);
         }
 
@@ -57,7 +57,7 @@ class CategoryController extends Controller
 
         return [
             'category' => new CategoryResource($category),
-            'products' => ProductResource::collection($products)
+            'products' => ProductResource::collection($products),
         ];
     }
 }

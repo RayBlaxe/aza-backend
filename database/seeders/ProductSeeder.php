@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -16,7 +15,7 @@ class ProductSeeder extends Seeder
 
         foreach ($categories as $category) {
             $products = $this->getProductsForCategory($category);
-            
+
             foreach ($products as $product) {
                 Product::create([
                     'category_id' => $category->id,

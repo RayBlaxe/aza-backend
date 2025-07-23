@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use Midtrans\Config;
-use Midtrans\Snap;
-use Midtrans\Notification;
 use Exception;
+use Midtrans\Config;
+use Midtrans\Notification;
+use Midtrans\Snap;
 
 class MidtransService
 {
@@ -31,9 +31,9 @@ class MidtransService
             ],
             'item_details' => $this->buildItemDetails($order),
             'callbacks' => [
-                'finish' => config('app.frontend_url') . '/payment/success',
-                'unfinish' => config('app.frontend_url') . '/payment/pending',
-                'error' => config('app.frontend_url') . '/payment/failed',
+                'finish' => config('app.frontend_url').'/payment/success',
+                'unfinish' => config('app.frontend_url').'/payment/pending',
+                'error' => config('app.frontend_url').'/payment/failed',
             ],
         ];
 
@@ -44,21 +44,22 @@ class MidtransService
                 'address' => $order->shipping_address['address'] ?? '',
                 'city' => $order->shipping_address['city'] ?? '',
                 'postal_code' => $order->shipping_address['postal_code'] ?? '',
-                'country_code' => 'IDN'
+                'country_code' => 'IDN',
             ];
         }
 
         try {
             $snapToken = Snap::getSnapToken($params);
+
             return [
                 'success' => true,
                 'snap_token' => $snapToken,
-                'redirect_url' => "https://app.sandbox.midtrans.com/snap/v2/vtweb/{$snapToken}"
+                'redirect_url' => "https://app.sandbox.midtrans.com/snap/v2/vtweb/{$snapToken}",
             ];
         } catch (Exception $e) {
             return [
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -66,8 +67,8 @@ class MidtransService
     public function handleNotification()
     {
         try {
-            $notification = new Notification();
-            
+            $notification = new Notification;
+
             $transactionStatus = $notification->transaction_status;
             $type = $notification->payment_type;
             $orderId = $notification->order_id;
@@ -78,16 +79,16 @@ class MidtransService
             if ($transactionStatus == 'capture') {
                 if ($fraud == 'challenge') {
                     $status = 'challenge';
-                } else if ($fraud == 'accept') {
+                } elseif ($fraud == 'accept') {
                     $status = 'paid';
                 }
-            } else if ($transactionStatus == 'settlement') {
+            } elseif ($transactionStatus == 'settlement') {
                 $status = 'paid';
-            } else if ($transactionStatus == 'cancel' || 
-                     $transactionStatus == 'deny' || 
+            } elseif ($transactionStatus == 'cancel' ||
+                     $transactionStatus == 'deny' ||
                      $transactionStatus == 'expire') {
                 $status = 'failed';
-            } else if ($transactionStatus == 'pending') {
+            } elseif ($transactionStatus == 'pending') {
                 $status = 'pending';
             }
 
@@ -97,23 +98,24 @@ class MidtransService
                 'transaction_status' => $transactionStatus,
                 'payment_type' => $type,
                 'fraud_status' => $fraud,
-                'raw_notification' => $notification->getResponse()
+                'raw_notification' => $notification->getResponse(),
             ];
         } catch (Exception $e) {
-            throw new Exception('Invalid notification: ' . $e->getMessage());
+            throw new Exception('Invalid notification: '.$e->getMessage());
         }
     }
 
     public function verifySignature($orderId, $statusCode, $grossAmount, $serverKey)
     {
-        $hash = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
+        $hash = hash('sha512', $orderId.$statusCode.$grossAmount.$serverKey);
+
         return $hash;
     }
 
     private function buildItemDetails($order)
     {
         $items = [];
-        
+
         foreach ($order->orderItems as $item) {
             $items[] = [
                 'id' => $item->product_id,

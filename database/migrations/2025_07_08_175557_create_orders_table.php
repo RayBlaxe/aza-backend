@@ -1,4 +1,5 @@
 <?php
+
 // database/migrations/xxxx_create_orders_table.php
 
 use Illuminate\Database\Migrations\Migration;
@@ -17,9 +18,9 @@ return new class extends Migration
             $table->decimal('shipping_cost', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2);
             $table->enum('status', ['pending', 'processing', 'paid', 'shipped', 'delivered', 'cancelled', 'refunded'])
-                  ->default('pending');
+                ->default('pending');
             $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded'])
-                  ->default('pending');
+                ->default('pending');
             $table->string('payment_method')->nullable();
             $table->string('midtrans_transaction_id')->nullable();
             $table->json('midtrans_response')->nullable();
@@ -29,7 +30,7 @@ return new class extends Migration
             $table->timestamp('shipped_at')->nullable();
             $table->timestamp('delivered_at')->nullable();
             $table->timestamps();
-            
+
             $table->index(['order_number', 'status']);
             $table->index(['user_id', 'status']);
         });

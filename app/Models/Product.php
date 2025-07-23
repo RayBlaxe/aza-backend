@@ -17,14 +17,14 @@ class Product extends Model
         'sku',
         'weight',
         'is_active',
-        'views'
+        'views',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'weight' => 'decimal:2',
         'is_active' => 'boolean',
-        'images' => 'array'
+        'images' => 'array',
     ];
 
     public function category()
@@ -51,7 +51,7 @@ class Product extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'like', "%{$search}%")
-              ->orWhere('description', 'like', "%{$search}%");
+                ->orWhere('description', 'like', "%{$search}%");
         });
     }
 

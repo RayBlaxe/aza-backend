@@ -1,4 +1,5 @@
 <?php
+
 // database/migrations/xxxx_create_products_table.php
 
 use Illuminate\Database\Migrations\Migration;
@@ -23,7 +24,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->integer('views')->default(0);
             $table->timestamps();
-            
+
             $table->index(['slug', 'is_active']);
             $table->index(['category_id', 'is_active']);
         });

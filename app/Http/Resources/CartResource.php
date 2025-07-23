@@ -15,7 +15,7 @@ class CartResource extends JsonResource
             'items' => CartItemResource::collection($this->whenLoaded('items')),
             'total_items' => $this->total_items,
             'total' => $this->total,
-            'formatted_total' => 'Rp ' . number_format($this->total, 0, ',', '.'),
+            'formatted_total' => 'Rp '.number_format($this->total, 0, ',', '.'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

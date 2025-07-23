@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
-use App\Models\OrderItem;
+use App\Http\Resources\OrderResource;
 use App\Models\Cart;
+use App\Models\Order;
 use App\Models\Product;
 use App\Services\MidtransService;
-use App\Http\Resources\OrderResource;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -38,7 +37,7 @@ class OrderController extends Controller
                 'current_page' => $orders->currentPage(),
                 'total_pages' => $orders->lastPage(),
                 'total_items' => $orders->total(),
-            ]
+            ],
         ]);
     }
 
@@ -59,17 +58,17 @@ class OrderController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
         $user = $request->user();
         $cart = $user->cart;
 
-        if (!$cart) {
+        if (! $cart) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cart not found'
+                'message' => 'Cart not found',
             ], 400);
         }
 
@@ -79,7 +78,7 @@ class OrderController extends Controller
         if ($cart->items->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cart is empty'
+                'message' => 'Cart is empty',
             ], 400);
         }
 
@@ -136,15 +135,15 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Order created successfully',
-                'data' => new OrderResource($order)
+                'data' => new OrderResource($order),
             ], 201);
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create order: ' . $e->getMessage()
+                'message' => 'Failed to create order: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -154,7 +153,7 @@ class OrderController extends Controller
         if ($order->user_id !== $request->user()->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found'
+                'message' => 'Order not found',
             ], 404);
         }
 
@@ -162,7 +161,7 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => new OrderResource($order)
+            'data' => new OrderResource($order),
         ]);
     }
 
@@ -171,33 +170,33 @@ class OrderController extends Controller
         if ($order->user_id !== $request->user()->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found'
+                'message' => 'Order not found',
             ], 404);
         }
 
         if ($order->payment_status === Order::PAYMENT_STATUS_PAID) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order already paid'
+                'message' => 'Order already paid',
             ], 400);
         }
 
         if ($order->payment_status === Order::PAYMENT_STATUS_FAILED) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cannot create payment for failed order'
+                'message' => 'Cannot create payment for failed order',
             ], 400);
         }
 
         $order->load(['orderItems', 'user']);
-        
+
         $paymentResult = $this->midtransService->createPaymentToken($order);
 
-        if (!$paymentResult['success']) {
+        if (! $paymentResult['success']) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create payment token',
-                'error' => $paymentResult['error']
+                'error' => $paymentResult['error'],
             ], 500);
         }
 
@@ -206,9 +205,78 @@ class OrderController extends Controller
             'data' => [
                 'snap_token' => $paymentResult['snap_token'],
                 'redirect_url' => $paymentResult['redirect_url'],
-                'order' => new OrderResource($order)
-            ]
+                'order' => new OrderResource($order),
+            ],
         ]);
+    }
+
+    public function updateStatus(Request $request, Order $order): JsonResponse
+    {
+        if ($order->user_id !== $request->user()->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|string|in:'.implode(',', [
+                Order::STATUS_PENDING,
+                Order::STATUS_PROCESSING,
+                Order::STATUS_SHIPPED,
+                Order::STATUS_DELIVERED,
+                Order::STATUS_CANCELLED,
+            ]),
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $newStatus = $request->status;
+
+        // Business logic: Only certain status transitions are allowed
+        $allowedTransitions = [
+            Order::STATUS_PENDING => [Order::STATUS_PROCESSING, Order::STATUS_CANCELLED],
+            Order::STATUS_PROCESSING => [Order::STATUS_SHIPPED, Order::STATUS_CANCELLED],
+            Order::STATUS_SHIPPED => [Order::STATUS_DELIVERED],
+            Order::STATUS_DELIVERED => [], // No transitions from delivered
+            Order::STATUS_CANCELLED => [], // No transitions from cancelled
+        ];
+
+        if (! in_array($newStatus, $allowedTransitions[$order->status] ?? [])) {
+            return response()->json([
+                'success' => false,
+                'message' => "Cannot transition from {$order->status} to {$newStatus}",
+            ], 400);
+        }
+
+        try {
+            // If updating to processing status due to payment success, also update payment status
+            if ($newStatus === Order::STATUS_PROCESSING && $order->payment_status === Order::PAYMENT_STATUS_PENDING) {
+                $order->updatePaymentStatus(Order::PAYMENT_STATUS_PAID);
+            } else {
+                $order->update(['status' => $newStatus]);
+            }
+
+            $order->load(['orderItems', 'user']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order status updated successfully',
+                'data' => new OrderResource($order),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update order status: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     public function cancel(Request $request, Order $order): JsonResponse
@@ -216,14 +284,14 @@ class OrderController extends Controller
         if ($order->user_id !== $request->user()->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found'
+                'message' => 'Order not found',
             ], 404);
         }
 
-        if (!$order->canBeCancelled()) {
+        if (! $order->canBeCancelled()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order cannot be cancelled'
+                'message' => 'Order cannot be cancelled',
             ], 400);
         }
 
@@ -238,22 +306,22 @@ class OrderController extends Controller
 
             $order->update([
                 'status' => Order::STATUS_CANCELLED,
-                'payment_status' => Order::PAYMENT_STATUS_FAILED
+                'payment_status' => Order::PAYMENT_STATUS_FAILED,
             ]);
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Order cancelled successfully'
+                'message' => 'Order cancelled successfully',
             ]);
 
         } catch (\Exception $e) {
             DB::rollback();
-            
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to cancel order'
+                'message' => 'Failed to cancel order',
             ], 500);
         }
     }

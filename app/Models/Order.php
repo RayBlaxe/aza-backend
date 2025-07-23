@@ -19,7 +19,7 @@ class Order extends Model
         'total_amount',
         'shipping_address',
         'payment_response',
-        'notes'
+        'notes',
     ];
 
     protected $casts = [
@@ -31,15 +31,23 @@ class Order extends Model
     ];
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_SHIPPED = 'shipped';
+
     const STATUS_DELIVERED = 'delivered';
+
     const STATUS_CANCELLED = 'cancelled';
 
     const PAYMENT_STATUS_PENDING = 'pending';
+
     const PAYMENT_STATUS_PAID = 'paid';
+
     const PAYMENT_STATUS_FAILED = 'failed';
+
     const PAYMENT_STATUS_EXPIRED = 'expired';
+
     const PAYMENT_STATUS_REFUNDED = 'refunded';
 
     public static function generateOrderNumber(): string
@@ -51,7 +59,7 @@ class Order extends Model
             '0',
             STR_PAD_LEFT
         );
-        
+
         return "ORD-{$date}-{$sequence}";
     }
 

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('quantity')->default(1);
             $table->decimal('price', 10, 2);
             $table->timestamps();
-            
+
             $table->unique(['cart_id', 'product_id']);
         });
     }

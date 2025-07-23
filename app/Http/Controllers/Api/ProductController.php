@@ -44,19 +44,19 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        if (!$product->is_active) {
+        if (! $product->is_active) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
         $product->increment('views');
-        
+
         return new ProductResource($product->load('category'));
     }
 
     public function search(Request $request)
     {
         $request->validate([
-            'q' => 'required|string|min:2|max:255'
+            'q' => 'required|string|min:2|max:255',
         ]);
 
         $products = Product::with('category')

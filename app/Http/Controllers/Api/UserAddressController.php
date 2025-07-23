@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\UserAddress;
-use Illuminate\Http\Request;
 use App\Http\Resources\UserAddressResource;
+use App\Models\UserAddress;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class UserAddressController extends Controller
@@ -14,9 +14,10 @@ class UserAddressController extends Controller
     public function index(Request $request): JsonResponse
     {
         $addresses = $request->user()->addresses()->orderBy('is_default', 'desc')->get();
+
         return response()->json([
             'success' => true,
-            'data' => UserAddressResource::collection($addresses)
+            'data' => UserAddressResource::collection($addresses),
         ]);
     }
 
@@ -35,7 +36,7 @@ class UserAddressController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -51,7 +52,7 @@ class UserAddressController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Address created successfully',
-            'data' => new UserAddressResource($address)
+            'data' => new UserAddressResource($address),
         ], 201);
     }
 
@@ -63,7 +64,7 @@ class UserAddressController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => new UserAddressResource($userAddress)
+            'data' => new UserAddressResource($userAddress),
         ]);
     }
 
@@ -86,7 +87,7 @@ class UserAddressController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -101,7 +102,7 @@ class UserAddressController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Address updated successfully',
-            'data' => new UserAddressResource($userAddress)
+            'data' => new UserAddressResource($userAddress),
         ]);
     }
 
@@ -132,7 +133,7 @@ class UserAddressController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Default address set successfully',
-            'data' => new UserAddressResource($userAddress)
+            'data' => new UserAddressResource($userAddress),
         ]);
     }
 }
