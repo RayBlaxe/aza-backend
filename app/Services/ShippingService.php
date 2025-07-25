@@ -2,121 +2,142 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Exception;
+
 class ShippingService
 {
-    // Origin postal code
-    private const ORIGIN_POSTAL_CODE = '28127'; // Pekanbaru
+    // Origin postal code for 26 Store Pekanbaru
+    private const ORIGIN_POSTAL_CODE = '28127';
     
-    // Base rates per city with distance from Pekanbaru (in Rupiah)
-    private const CITY_RATES = [
-        'pekanbaru' => 8000,    // Same city
-        'dumai' => 10000,       // ~138 km
-        'rengat' => 12000,      // ~182 km  
-        'bangkinang' => 9000,   // ~56 km
-        'duri' => 11000,        // ~122 km
-        'batam' => 15000,       // ~272 km
-        'tanjungpinang' => 16000, // ~290 km
-        'jakarta' => 22000,     // ~870 km
-        'bandung' => 24000,     // ~920 km
-        'surabaya' => 28000,    // ~1200 km
-        'medan' => 18000,       // ~440 km
-        'padang' => 20000,      // ~340 km
-        'jambi' => 16000,       // ~230 km
-        'palembang' => 20000,   // ~350 km
-        'lampung' => 25000,     // ~580 km
-        'semarang' => 26000,    // ~1100 km
-        'yogyakarta' => 27000,  // ~1150 km
-        'makassar' => 35000,    // ~1600 km
-        'manado' => 40000,      // ~2200 km
-        'pontianak' => 22000,   // ~520 km
-    ];
-
-    // Weight-based multipliers
-    private const WEIGHT_MULTIPLIERS = [
-        'light' => 1.0,    // 0-1kg
-        'medium' => 1.5,   // 1-5kg
-        'heavy' => 2.0,    // 5kg+
-    ];
-
-    // Courier services with different rates
-    private const COURIER_MULTIPLIERS = [
-        'regular' => 1.0,
-        'express' => 1.5,
-        'same_day' => 2.5,
-    ];
+    // RajaOngkir API base URL
+    private const RAJAONGKIR_BASE_URL = 'https://rajaongkir.komerce.id/api/v1';
+    
+    // Default courier
+    private const DEFAULT_COURIER = 'jne';
 
     /**
-     * Calculate shipping cost based on destination, weight, and service type
+     * Calculate shipping cost using RajaOngkir API based on postal codes
      */
     public function calculateShippingCost(
-        string $destinationCity,
+        string $destinationPostalCode,
         float $totalWeight = 1.0,
         string $courierService = 'regular'
     ): array {
-        $city = strtolower(trim($destinationCity));
-        
-        // Get base rate for city (default to standard rate if city not found)
-        $baseRate = self::CITY_RATES[$city] ?? 15000;
-        
-        // Determine weight category
-        $weightCategory = $this->getWeightCategory($totalWeight);
-        $weightMultiplier = self::WEIGHT_MULTIPLIERS[$weightCategory];
-        
-        // Get courier service multiplier
-        $courierMultiplier = self::COURIER_MULTIPLIERS[$courierService] ?? 1.0;
-        
-        // Calculate final cost
-        $finalCost = $baseRate * $weightMultiplier * $courierMultiplier;
-        
-        // Round to nearest 1000
-        $finalCost = ceil($finalCost / 1000) * 1000;
-        
-        return [
-            'base_rate' => $baseRate,
-            'weight_category' => $weightCategory,
-            'weight_multiplier' => $weightMultiplier,
-            'courier_service' => $courierService,
-            'courier_multiplier' => $courierMultiplier,
-            'total_cost' => $finalCost,
-            'estimated_days' => $this->getEstimatedDeliveryDays($city, $courierService),
-        ];
+        try {
+            // Convert weight to grams (RajaOngkir expects weight in grams)
+            $weightInGrams = max(ceil($totalWeight * 1000), 1000); // Minimum 1kg
+            
+            $response = Http::withHeaders([
+                'key' => env('RAJAONGKIR_API_KEY'),
+                'Content-Type' => 'application/x-www-form-urlencoded'
+            ])->asForm()->post(self::RAJAONGKIR_BASE_URL . '/calculate/domestic-cost', [
+                'origin' => self::ORIGIN_POSTAL_CODE,
+                'destination' => $destinationPostalCode,
+                'weight' => $weightInGrams,
+                'courier' => self::DEFAULT_COURIER,
+                'price' => 'lowest'
+            ]);
+            
+            if (!$response->successful()) {
+                Log::error('RajaOngkir API failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                throw new Exception('Failed to calculate shipping cost');
+            }
+            
+            $data = $response->json();
+            
+            if (!isset($data['data']) || empty($data['data'])) {
+                throw new Exception('No shipping options available');
+            }
+            
+            // Get the first (cheapest) option
+            $shippingOption = $data['data'][0];
+            
+            return [
+                'courier_name' => $shippingOption['name'],
+                'courier_code' => $shippingOption['code'],
+                'service' => $shippingOption['service'],
+                'service_description' => $shippingOption['description'],
+                'total_cost' => $shippingOption['cost'],
+                'estimated_delivery' => $shippingOption['etd'],
+                'weight_grams' => $weightInGrams,
+                'origin' => self::ORIGIN_POSTAL_CODE,
+                'destination' => $destinationPostalCode,
+                'all_services' => $data['data'] // Include all available services
+            ];
+            
+        } catch (Exception $e) {
+            Log::error('Shipping calculation error', [
+                'error' => $e->getMessage(),
+                'destination' => $destinationPostalCode,
+                'weight' => $totalWeight
+            ]);
+            
+            // Fallback to basic calculation
+            return $this->getFallbackShippingCost($totalWeight);
+        }
     }
 
     /**
-     * Get available courier services for a destination
+     * Get all shipping services available for a destination
      */
-    public function getAvailableCourierServices(string $destinationCity): array
+    public function getAvailableCourierServices(string $destinationPostalCode, float $totalWeight = 1.0): array
     {
-        $city = strtolower(trim($destinationCity));
-        
-        // Same day delivery only available for major cities
-        $majorCities = ['pekanbaru', 'jakarta', 'bandung', 'surabaya', 'medan'];
-        
-        $services = [
-            [
-                'code' => 'regular',
-                'name' => 'Reguler',
-                'description' => 'Pengiriman standar',
-                'multiplier' => 1.0,
-            ],
-            [
-                'code' => 'express',
-                'name' => 'Express',
-                'description' => 'Pengiriman cepat',
-                'multiplier' => 1.5,
-            ],
-        ];
-        
-        if (in_array($city, $majorCities)) {
-            $services[] = [
-                'code' => 'same_day',
-                'name' => 'Same Day',
-                'description' => 'Pengiriman hari yang sama',
-                'multiplier' => 2.5,
-            ];
+        try {
+            $weightInGrams = max(ceil($totalWeight * 1000), 1000);
+            
+            $response = Http::withHeaders([
+                'key' => env('RAJAONGKIR_API_KEY'),
+                'Content-Type' => 'application/x-www-form-urlencoded'
+            ])->asForm()->post(self::RAJAONGKIR_BASE_URL . '/calculate/domestic-cost', [
+                'origin' => self::ORIGIN_POSTAL_CODE,
+                'destination' => $destinationPostalCode,
+                'weight' => $weightInGrams,
+                'courier' => self::DEFAULT_COURIER,
+                'price' => 'lowest'
+            ]);
+            
+            if (!$response->successful()) {
+                throw new Exception('Failed to get courier services');
+            }
+            
+            $data = $response->json();
+            
+            if (!isset($data['data']) || empty($data['data'])) {
+                throw new Exception('No courier services available');
+            }
+            
+            return array_map(function ($service) {
+                return [
+                    'code' => $service['service'],
+                    'name' => $service['name'],
+                    'service' => $service['service'],
+                    'description' => $service['description'],
+                    'cost' => $service['cost'],
+                    'etd' => $service['etd']
+                ];
+            }, $data['data']);
+            
+        } catch (Exception $e) {
+            Log::error('Failed to get courier services', [
+                'error' => $e->getMessage(),
+                'destination' => $destinationPostalCode
+            ]);
+            
+            // Return basic fallback service
+            return [[
+                'code' => 'REG',
+                'name' => 'JNE',
+                'service' => 'REG',
+                'description' => 'Layanan Reguler',
+                'cost' => 15000,
+                'etd' => '2-3 day'
+            ]];
         }
-        
-        return $services;
     }
 
     /**
@@ -132,7 +153,7 @@ class ShippingService
             $totalWeight += $productWeight * $item->quantity;
         }
         
-        return max($totalWeight, 0.5); // Minimum 0.5kg
+        return max($totalWeight, 1.0); // Minimum 1kg for RajaOngkir
     }
 
     /**
@@ -161,55 +182,62 @@ class ShippingService
     }
 
     /**
-     * Get weight category based on total weight
+     * Search for destination addresses using RajaOngkir API
      */
-    private function getWeightCategory(float $weight): string
+    public function searchDestinations(string $query, int $limit = 10, int $offset = 0): array
     {
-        if ($weight <= 1.0) {
-            return 'light';
-        } elseif ($weight <= 5.0) {
-            return 'medium';
-        } else {
-            return 'heavy';
+        try {
+            $response = Http::withHeaders([
+                'key' => env('RAJAONGKIR_API_KEY'),
+            ])->get(self::RAJAONGKIR_BASE_URL . '/destination/domestic-destination', [
+                'search' => $query,
+                'limit' => $limit,
+                'offset' => $offset
+            ]);
+            
+            if (!$response->successful()) {
+                throw new Exception('Failed to search destinations');
+            }
+            
+            $data = $response->json();
+            
+            if (!isset($data['data'])) {
+                return [];
+            }
+            
+            return $data['data'];
+            
+        } catch (Exception $e) {
+            Log::error('Failed to search destinations', [
+                'error' => $e->getMessage(),
+                'query' => $query
+            ]);
+            
+            return [];
         }
     }
-
+    
     /**
-     * Get estimated delivery days
+     * Fallback shipping cost calculation when API fails
      */
-    private function getEstimatedDeliveryDays(string $city, string $courierService): array
+    private function getFallbackShippingCost(float $totalWeight): array
     {
-        $baseDays = [
-            'pekanbaru' => 1,
-            'jakarta' => 2,
-            'bandung' => 2,
-            'surabaya' => 3,
-            'medan' => 2,
-            'semarang' => 3,
-            'makassar' => 4,
-            'yogyakarta' => 3,
-            'palembang' => 2,
-            'batam' => 2,
+        $baseCost = 15000; // Base cost in Rupiah
+        $weightMultiplier = 1 + (($totalWeight - 1) * 0.1); // Add 10% per kg above 1kg
+        $finalCost = ceil($baseCost * $weightMultiplier / 1000) * 1000;
+        
+        return [
+            'courier_name' => 'JNE',
+            'courier_code' => 'jne',
+            'service' => 'REG',
+            'service_description' => 'Layanan Reguler (Fallback)',
+            'total_cost' => $finalCost,
+            'estimated_delivery' => '2-3 day',
+            'weight_grams' => ceil($totalWeight * 1000),
+            'origin' => self::ORIGIN_POSTAL_CODE,
+            'destination' => 'unknown',
+            'is_fallback' => true
         ];
-        
-        $base = $baseDays[$city] ?? 3;
-        
-        switch ($courierService) {
-            case 'same_day':
-                return ['min' => 0, 'max' => 1];
-            case 'express':
-                return ['min' => max(1, $base - 1), 'max' => $base];
-            default:
-                return ['min' => $base, 'max' => $base + 2];
-        }
-    }
-
-    /**
-     * Get all supported cities
-     */
-    public function getSupportedCities(): array
-    {
-        return array_keys(self::CITY_RATES);
     }
 
     /**
@@ -226,97 +254,14 @@ class ShippingService
     }
 
     /**
-     * Calculate shipping cost with destination postal code support
+     * Calculate shipping cost with destination postal code support (main method)
      */
     public function calculateShippingByPostalCode(
         string $destinationPostalCode,
         float $totalWeight = 1.0,
         string $courierService = 'regular'
     ): array {
-        // For now, we'll use city-based calculation
-        // In a real application, you would use a postal code API service
-        // to determine the city from postal code
-        
-        $city = $this->getCityFromPostalCode($destinationPostalCode);
-        
-        return $this->calculateShippingCost($city, $totalWeight, $courierService);
-    }
-
-    /**
-     * Get city from postal code (simplified mapping)
-     */
-    private function getCityFromPostalCode(string $postalCode): string
-    {
-        // This is a simplified mapping - in production you'd use a proper API
-        $postalCodeMap = [
-            '28127' => 'pekanbaru',
-            '28111' => 'pekanbaru',
-            '28112' => 'pekanbaru',
-            '28113' => 'pekanbaru',
-            '28114' => 'pekanbaru',
-            '28115' => 'pekanbaru',
-            '28116' => 'pekanbaru',
-            '28117' => 'pekanbaru',
-            '28118' => 'pekanbaru',
-            '28119' => 'pekanbaru',
-            '28121' => 'pekanbaru',
-            '28122' => 'pekanbaru',
-            '28123' => 'pekanbaru',
-            '28124' => 'pekanbaru',
-            '28125' => 'pekanbaru',
-            '28126' => 'pekanbaru',
-            '28127' => 'pekanbaru',
-            '28128' => 'pekanbaru',
-            '28129' => 'pekanbaru',
-            '28131' => 'pekanbaru',
-            '28132' => 'pekanbaru',
-            '28133' => 'pekanbaru',
-            '28134' => 'pekanbaru',
-            '28135' => 'pekanbaru',
-            '28136' => 'pekanbaru',
-            '28141' => 'pekanbaru',
-            '28142' => 'pekanbaru',
-            '28143' => 'pekanbaru',
-            '28144' => 'pekanbaru',
-            '28151' => 'pekanbaru',
-            '28152' => 'pekanbaru',
-            '28153' => 'pekanbaru',
-            '28154' => 'pekanbaru',
-            '28155' => 'pekanbaru',
-            '28156' => 'pekanbaru',
-            '28161' => 'pekanbaru',
-            '28171' => 'pekanbaru',
-            '28172' => 'pekanbaru',
-            '28173' => 'pekanbaru',
-            '28174' => 'pekanbaru',
-            '28175' => 'pekanbaru',
-            '28176' => 'pekanbaru',
-            '28177' => 'pekanbaru',
-            '28178' => 'pekanbaru',
-            '28179' => 'pekanbaru',
-            '28181' => 'pekanbaru',
-            '28182' => 'pekanbaru',
-            '28183' => 'pekanbaru',
-            '28284' => 'dumai',
-            '28285' => 'dumai',
-            '28286' => 'dumai',
-            '28287' => 'dumai',
-            '28288' => 'dumai',
-            '28289' => 'dumai',
-            '29711' => 'batam',
-            '29712' => 'batam',
-            '29713' => 'batam',
-            '29714' => 'batam',
-            '29715' => 'batam',
-            '29716' => 'batam',
-            '10110' => 'jakarta',
-            '10111' => 'jakarta',
-            '10112' => 'jakarta',
-            '20111' => 'medan',
-            '20112' => 'medan',
-            '20113' => 'medan',
-        ];
-
-        return $postalCodeMap[$postalCode] ?? 'jakarta'; // Default to Jakarta if not found
+        // Use the main calculateShippingCost method which now uses RajaOngkir API
+        return $this->calculateShippingCost($destinationPostalCode, $totalWeight, $courierService);
     }
 }

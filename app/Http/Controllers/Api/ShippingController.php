@@ -18,13 +18,13 @@ class ShippingController extends Controller
     }
 
     /**
-     * Calculate shipping cost
+     * Calculate shipping cost using postal code
      */
     public function calculateShipping(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'destination_city' => 'required|string',
-            'total_weight' => 'numeric|min:0.1',
+            'destination_postal_code' => 'required|string',
+            'total_weight' => 'numeric|min:1',
             'courier_service' => 'string|in:regular,express,same_day',
         ]);
 
@@ -36,13 +36,13 @@ class ShippingController extends Controller
             ], 422);
         }
 
-        $destinationCity = $request->destination_city;
+        $destinationPostalCode = $request->destination_postal_code;
         $totalWeight = $request->total_weight ?? 1.0;
         $courierService = $request->courier_service ?? 'regular';
 
         try {
             $shippingCost = $this->shippingService->calculateShippingCost(
-                $destinationCity,
+                $destinationPostalCode,
                 $totalWeight,
                 $courierService
             );
@@ -65,8 +65,7 @@ class ShippingController extends Controller
     public function calculateCartShipping(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'destination_city' => 'required_without:destination_postal_code|string',
-            'destination_postal_code' => 'required_without:destination_city|string',
+            'destination_postal_code' => 'required|string',
             'courier_service' => 'string|in:regular,express,same_day',
         ]);
 
@@ -94,27 +93,18 @@ class ShippingController extends Controller
             $totalWeight = $this->shippingService->calculateCartWeight($cart->items);
             $courierService = $request->courier_service ?? 'regular';
 
-            // Use postal code if provided, otherwise use city
-            if ($request->destination_postal_code) {
-                $shippingCost = $this->shippingService->calculateShippingByPostalCode(
-                    $request->destination_postal_code,
-                    $totalWeight,
-                    $courierService
-                );
-            } else {
-                $shippingCost = $this->shippingService->calculateShippingCost(
-                    $request->destination_city,
-                    $totalWeight,
-                    $courierService
-                );
-            }
+            // Use postal code for shipping calculation (RajaOngkir requires postal code)
+            $shippingCost = $this->shippingService->calculateShippingCost(
+                $request->destination_postal_code,
+                $totalWeight,
+                $courierService
+            );
 
             return response()->json([
                 'success' => true,
                 'data' => array_merge($shippingCost, [
                     'total_weight' => $totalWeight,
                     'item_count' => $cart->items->sum('quantity'),
-                    'origin' => $this->shippingService->getOriginInfo(),
                 ]),
             ]);
         } catch (\Exception $e) {
@@ -126,12 +116,13 @@ class ShippingController extends Controller
     }
 
     /**
-     * Get available courier services for a city
+     * Get available courier services for a postal code
      */
     public function getCourierServices(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'city' => 'required|string',
+            'postal_code' => 'required|string',
+            'weight' => 'numeric|min:1',
         ]);
 
         if ($validator->fails()) {
@@ -143,7 +134,8 @@ class ShippingController extends Controller
         }
 
         try {
-            $services = $this->shippingService->getAvailableCourierServices($request->city);
+            $weight = $request->weight ?? 1.0;
+            $services = $this->shippingService->getAvailableCourierServices($request->postal_code, $weight);
 
             return response()->json([
                 'success' => true,
@@ -158,23 +150,59 @@ class ShippingController extends Controller
     }
 
     /**
-     * Get supported cities
+     * Search destinations using RajaOngkir API
      */
-    public function getSupportedCities(): JsonResponse
+    public function searchDestinations(Request $request): JsonResponse
     {
+        $validator = Validator::make($request->all(), [
+            'search' => 'required|string|min:2',
+            'limit' => 'integer|min:1|max:50',
+            'offset' => 'integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         try {
-            $cities = $this->shippingService->getSupportedCities();
+            $search = $request->search;
+            $limit = $request->limit ?? 10;
+            $offset = $request->offset ?? 0;
+            
+            $destinations = $this->shippingService->searchDestinations($search, $limit, $offset);
 
             return response()->json([
                 'success' => true,
-                'data' => array_map('ucfirst', $cities),
+                'data' => $destinations,
+                'meta' => [
+                    'search_query' => $search,
+                    'limit' => $limit,
+                    'offset' => $offset,
+                    'count' => count($destinations)
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to get supported cities: ' . $e->getMessage(),
+                'message' => 'Failed to search destinations: ' . $e->getMessage(),
             ], 500);
         }
+    }
+    
+    /**
+     * Get supported cities (legacy method - now returns search suggestion)
+     */
+    public function getSupportedCities(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'message' => 'Use /api/shipping/search-destinations endpoint with search parameter',
+            'data' => [],
+        ]);
     }
 
     /**
@@ -182,18 +210,15 @@ class ShippingController extends Controller
      */
     public function getOriginInfo(): JsonResponse
     {
-        try {
-            $origin = $this->shippingService->getOriginInfo();
-
-            return response()->json([
-                'success' => true,
-                'data' => $origin,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to get origin info: ' . $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'postal_code' => '28127',
+                'city' => 'Pekanbaru',
+                'province' => 'Riau',
+                'country' => 'Indonesia',
+                'store_name' => '26 Store Pekanbaru'
+            ],
+        ]);
     }
 }

@@ -43,12 +43,14 @@ Route::get('/shipping/cities', [ShippingController::class, 'getSupportedCities']
 Route::get('/shipping/origin', [ShippingController::class, 'getOriginInfo']);
 Route::get('/shipping/courier-services', [ShippingController::class, 'getCourierServices']);
 Route::post('/shipping/calculate', [ShippingController::class, 'calculateShipping']);
+Route::get('/shipping/search-destinations', [ShippingController::class, 'searchDestinations']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
 
     // Cart routes
     Route::prefix('cart')->group(function () {

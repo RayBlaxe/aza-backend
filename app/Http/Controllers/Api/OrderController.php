@@ -52,7 +52,7 @@ class OrderController extends Controller
             'shipping_address.phone' => 'required|string',
             'shipping_address.address' => 'required|string',
             'shipping_address.city' => 'required|string',
-            'shipping_address.state' => 'required|string',
+            'shipping_address.province' => 'required|string',
             'shipping_address.postal_code' => 'required|string',
             'courier_service' => 'string|in:regular,express,same_day',
             'notes' => 'nullable|string|max:500',
@@ -111,24 +111,16 @@ class OrderController extends Controller
                 $cartItem->product->decrement('stock', $cartItem->quantity);
             }
 
-            // Calculate dynamic shipping cost
+            // Calculate dynamic shipping cost using RajaOngkir API
             $courierService = $request->courier_service ?? 'regular';
             $totalWeight = $this->shippingService->calculateCartWeight($cart->items);
             
-            // Use postal code if available, otherwise use city
-            if (isset($request->shipping_address['postal_code']) && !empty($request->shipping_address['postal_code'])) {
-                $shippingCalculation = $this->shippingService->calculateShippingByPostalCode(
-                    $request->shipping_address['postal_code'],
-                    $totalWeight,
-                    $courierService
-                );
-            } else {
-                $shippingCalculation = $this->shippingService->calculateShippingCost(
-                    $request->shipping_address['city'],
-                    $totalWeight,
-                    $courierService
-                );
-            }
+            // Use postal code for shipping calculation (required for RajaOngkir)
+            $shippingCalculation = $this->shippingService->calculateShippingCost(
+                $request->shipping_address['postal_code'],
+                $totalWeight,
+                $courierService
+            );
             $shippingCost = $shippingCalculation['total_cost'];
             $totalAmount = $subtotal + $shippingCost;
 
