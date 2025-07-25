@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\UserAddressController;
+use App\Http\Controllers\Api\ShippingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,6 +37,12 @@ Route::get('/products/{product}', [ProductController::class, 'show']);
 // Public category routes
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
+
+// Public shipping routes
+Route::get('/shipping/cities', [ShippingController::class, 'getSupportedCities']);
+Route::get('/shipping/origin', [ShippingController::class, 'getOriginInfo']);
+Route::get('/shipping/courier-services', [ShippingController::class, 'getCourierServices']);
+Route::post('/shipping/calculate', [ShippingController::class, 'calculateShipping']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -60,10 +67,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus']);
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel']);
     Route::get('/orders/{order}/status', [PaymentController::class, 'getPaymentStatus']);
+    Route::get('/orders/{order}/tracking', [OrderController::class, 'getTracking']);
+    Route::put('/orders/{order}/tracking', [OrderController::class, 'updateTracking']);
 
     // User Address routes
     Route::apiResource('user-addresses', UserAddressController::class);
     Route::post('user-addresses/{userAddress}/set-default', [UserAddressController::class, 'setDefault']);
+    
+    // Shipping routes (protected)
+    Route::post('/shipping/calculate-cart', [ShippingController::class, 'calculateCartShipping']);
 });
 
 // Public routes

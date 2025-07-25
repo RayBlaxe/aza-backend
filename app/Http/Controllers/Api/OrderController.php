@@ -8,6 +8,7 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\MidtransService;
+use App\Services\ShippingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,10 +17,12 @@ use Illuminate\Support\Facades\Validator;
 class OrderController extends Controller
 {
     protected $midtransService;
+    protected $shippingService;
 
-    public function __construct(MidtransService $midtransService)
+    public function __construct(MidtransService $midtransService, ShippingService $shippingService)
     {
         $this->midtransService = $midtransService;
+        $this->shippingService = $shippingService;
     }
 
     public function index(Request $request): JsonResponse
@@ -51,6 +54,7 @@ class OrderController extends Controller
             'shipping_address.city' => 'required|string',
             'shipping_address.state' => 'required|string',
             'shipping_address.postal_code' => 'required|string',
+            'courier_service' => 'string|in:regular,express,same_day',
             'notes' => 'nullable|string|max:500',
         ]);
 
@@ -107,7 +111,25 @@ class OrderController extends Controller
                 $cartItem->product->decrement('stock', $cartItem->quantity);
             }
 
-            $shippingCost = 15000; // Flat rate shipping
+            // Calculate dynamic shipping cost
+            $courierService = $request->courier_service ?? 'regular';
+            $totalWeight = $this->shippingService->calculateCartWeight($cart->items);
+            
+            // Use postal code if available, otherwise use city
+            if (isset($request->shipping_address['postal_code']) && !empty($request->shipping_address['postal_code'])) {
+                $shippingCalculation = $this->shippingService->calculateShippingByPostalCode(
+                    $request->shipping_address['postal_code'],
+                    $totalWeight,
+                    $courierService
+                );
+            } else {
+                $shippingCalculation = $this->shippingService->calculateShippingCost(
+                    $request->shipping_address['city'],
+                    $totalWeight,
+                    $courierService
+                );
+            }
+            $shippingCost = $shippingCalculation['total_cost'];
             $totalAmount = $subtotal + $shippingCost;
 
             $order = Order::create([
@@ -117,6 +139,7 @@ class OrderController extends Controller
                 'payment_status' => Order::PAYMENT_STATUS_PENDING,
                 'subtotal' => $subtotal,
                 'shipping_cost' => $shippingCost,
+                'courier_service' => $courierService,
                 'total_amount' => $totalAmount,
                 'shipping_address' => $request->shipping_address,
                 'notes' => $request->notes,
@@ -324,5 +347,97 @@ class OrderController extends Controller
                 'message' => 'Failed to cancel order',
             ], 500);
         }
+    }
+
+    public function updateTracking(Request $request, Order $order): JsonResponse
+    {
+        // Only admin or order owner can update tracking
+        if ($order->user_id !== $request->user()->id && !$request->user()->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found',
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'tracking_status' => 'required|string',
+            'location' => 'nullable|string',
+            'description' => 'nullable|string',
+            'tracking_number' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        if (!$order->canUpdateTracking()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot update tracking for this order',
+            ], 400);
+        }
+
+        try {
+            // Set tracking number if provided
+            if ($request->tracking_number && !$order->tracking_number) {
+                $order->setTrackingNumber($request->tracking_number);
+            }
+
+            $order->updateTrackingStatus($request->tracking_status, [
+                'location' => $request->location,
+                'description' => $request->description,
+                'updated_by' => $request->user()->name,
+            ]);
+
+            // Update main order status if needed
+            if ($request->tracking_status === 'delivered') {
+                $order->update(['status' => Order::STATUS_DELIVERED]);
+            } elseif ($request->tracking_status === 'in_transit' && $order->status === Order::STATUS_PROCESSING) {
+                $order->update(['status' => Order::STATUS_SHIPPED]);
+            }
+
+            $order->load(['orderItems', 'user']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tracking updated successfully',
+                'data' => new OrderResource($order),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update tracking: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getTracking(Request $request, Order $order): JsonResponse
+    {
+        if ($order->user_id !== $request->user()->id && !$request->user()->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'order_number' => $order->order_number,
+                'status' => $order->status,
+                'tracking_number' => $order->tracking_number,
+                'tracking_history' => $order->tracking_history ?? [],
+                'tracking_progress' => $order->getTrackingProgress(),
+                'latest_status' => $order->getLatestTrackingStatus(),
+                'shipped_at' => $order->shipped_at,
+                'delivered_at' => $order->delivered_at,
+                'courier_service' => $order->courier_service,
+            ],
+        ]);
     }
 }

@@ -99,6 +99,12 @@ class OrderManagementController extends Controller
             'shipping_address' => $order->shipping_address,
             'payment_response' => $order->payment_response,
             'notes' => $order->notes,
+            'courier_service' => $order->courier_service,
+            'tracking_number' => $order->tracking_number,
+            'tracking_history' => $order->tracking_history ?? [],
+            'tracking_progress' => $order->getTrackingProgress(),
+            'shipped_at' => $order->shipped_at,
+            'delivered_at' => $order->delivered_at,
             'created_at' => $order->created_at,
             'updated_at' => $order->updated_at,
             'can_be_cancelled' => $order->canBeCancelled(),
@@ -137,6 +143,10 @@ class OrderManagementController extends Controller
                 ]),
             ],
             'notes' => 'nullable|string',
+            'tracking_number' => 'nullable|string',
+            'tracking_status' => 'nullable|string',
+            'tracking_location' => 'nullable|string',
+            'tracking_description' => 'nullable|string',
         ]);
 
         $oldStatus = $order->status;
@@ -152,10 +162,31 @@ class OrderManagementController extends Controller
             $order->restoreStock();
         }
 
+        // Update tracking number if provided
+        if ($request->tracking_number && !$order->tracking_number) {
+            $order->setTrackingNumber($request->tracking_number);
+        }
+
+        // Update tracking status if provided
+        if ($request->tracking_status) {
+            $order->updateTrackingStatus($request->tracking_status, [
+                'location' => $request->tracking_location,
+                'description' => $request->tracking_description,
+                'updated_by' => 'admin',
+            ]);
+        }
+
         $order->update([
             'status' => $newStatus,
             'notes' => $request->get('notes', $order->notes),
         ]);
+
+        // Auto-update timestamps based on status
+        if ($newStatus === Order::STATUS_SHIPPED && !$order->shipped_at) {
+            $order->update(['shipped_at' => now()]);
+        } elseif ($newStatus === Order::STATUS_DELIVERED && !$order->delivered_at) {
+            $order->update(['delivered_at' => now()]);
+        }
 
         return response()->json([
             'message' => "Order status updated from {$oldStatus} to {$newStatus}",
