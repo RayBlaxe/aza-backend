@@ -36,8 +36,7 @@ class ShippingService
                 'origin' => self::ORIGIN_POSTAL_CODE,
                 'destination' => $destinationPostalCode,
                 'weight' => $weightInGrams,
-                'courier' => self::DEFAULT_COURIER,
-                'price' => 'lowest'
+                'courier' => self::DEFAULT_COURIER
             ]);
             
             if (!$response->successful()) {
@@ -54,8 +53,32 @@ class ShippingService
                 throw new Exception('No shipping options available');
             }
             
-            // Get the first (cheapest) option
-            $shippingOption = $data['data'][0];
+            // Find the requested service or get the cheapest option
+            $shippingOption = null;
+            if ($courierService && $courierService !== 'regular') {
+                // Look for the specific service requested
+                foreach ($data['data'] as $service) {
+                    if ($service['service'] === $courierService) {
+                        $shippingOption = $service;
+                        break;
+                    }
+                }
+            }
+            
+            // If no specific service found or requesting 'regular', get the cheapest option
+            if (!$shippingOption) {
+                // Find REG service first (preferred default), otherwise use first option
+                foreach ($data['data'] as $service) {
+                    if ($service['service'] === 'REG') {
+                        $shippingOption = $service;
+                        break;
+                    }
+                }
+                // If no REG service, use first option
+                if (!$shippingOption) {
+                    $shippingOption = $data['data'][0];
+                }
+            }
             
             return [
                 'courier_name' => $shippingOption['name'],
@@ -97,8 +120,7 @@ class ShippingService
                 'origin' => self::ORIGIN_POSTAL_CODE,
                 'destination' => $destinationPostalCode,
                 'weight' => $weightInGrams,
-                'courier' => self::DEFAULT_COURIER,
-                'price' => 'lowest'
+                'courier' => self::DEFAULT_COURIER
             ]);
             
             if (!$response->successful()) {

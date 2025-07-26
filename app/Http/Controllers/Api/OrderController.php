@@ -46,19 +46,28 @@ class OrderController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        // Debug: Log the incoming request data
+        \Log::info('Order creation request data:', $request->all());
+        
         $validator = Validator::make($request->all(), [
             'shipping_address' => 'required|array',
             'shipping_address.name' => 'required|string',
             'shipping_address.phone' => 'required|string',
             'shipping_address.address' => 'required|string',
             'shipping_address.city' => 'required|string',
-            'shipping_address.province' => 'required|string',
+            'shipping_address.province' => 'nullable|string',
+            'shipping_address.state' => 'nullable|string',
             'shipping_address.postal_code' => 'required|string',
-            'courier_service' => 'string|in:regular,express,same_day',
+            'courier_service' => 'nullable|string|in:REG,regular,express,same_day',
             'notes' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
+            \Log::error('Order validation failed:', [
+                'errors' => $validator->errors()->toArray(),
+                'input_data' => $request->all()
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Validation error',
@@ -124,6 +133,12 @@ class OrderController extends Controller
             $shippingCost = $shippingCalculation['total_cost'];
             $totalAmount = $subtotal + $shippingCost;
 
+            // Normalize shipping address - handle both 'state' and 'province' fields
+            $shippingAddress = $request->shipping_address;
+            if (isset($shippingAddress['state']) && !isset($shippingAddress['province'])) {
+                $shippingAddress['province'] = $shippingAddress['state'];
+            }
+
             $order = Order::create([
                 'user_id' => $user->id,
                 'order_number' => Order::generateOrderNumber(),
@@ -133,7 +148,7 @@ class OrderController extends Controller
                 'shipping_cost' => $shippingCost,
                 'courier_service' => $courierService,
                 'total_amount' => $totalAmount,
-                'shipping_address' => $request->shipping_address,
+                'shipping_address' => $shippingAddress,
                 'notes' => $request->notes,
             ]);
 

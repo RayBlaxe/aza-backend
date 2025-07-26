@@ -25,7 +25,7 @@ class ShippingController extends Controller
         $validator = Validator::make($request->all(), [
             'destination_postal_code' => 'required|string',
             'total_weight' => 'numeric|min:1',
-            'courier_service' => 'string|in:regular,express,same_day',
+            'courier_service' => 'string',
         ]);
 
         if ($validator->fails()) {
@@ -66,7 +66,7 @@ class ShippingController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'destination_postal_code' => 'required|string',
-            'courier_service' => 'string|in:regular,express,same_day',
+            'courier_service' => 'string',
         ]);
 
         if ($validator->fails()) {
