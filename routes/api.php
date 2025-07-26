@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CategoryManagementController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderManagementController;
 use App\Http\Controllers\Admin\ProductManagementController;
+use App\Http\Controllers\Admin\ReportsController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CartController;
@@ -93,6 +94,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
     // Products Management
     Route::apiResource('products', ProductManagementController::class);
+    Route::get('products-statistics', [ProductManagementController::class, 'getStatistics']);
     Route::post('products/{product}/toggle-status', [ProductManagementController::class, 'toggleStatus']);
     Route::post('products/upload-image', [ProductManagementController::class, 'uploadImage']);
     Route::delete('products/bulk-delete', [ProductManagementController::class, 'bulkDelete']);
@@ -119,4 +121,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::delete('categories/bulk-delete', [CategoryManagementController::class, 'bulkDelete']);
     Route::get('categories/export/csv', [CategoryManagementController::class, 'exportCsv']);
     Route::get('categories/statistics', [CategoryManagementController::class, 'getStatistics']);
+
+    // Reports
+    Route::get('reports/sales', [ReportsController::class, 'getSalesReport']);
 });

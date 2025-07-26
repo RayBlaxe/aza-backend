@@ -256,4 +256,19 @@ class ProductManagementController extends Controller
             'filename' => $filename,
         ]);
     }
+
+    public function getStatistics(): JsonResponse
+    {
+        $totalProducts = Product::count();
+        $activeProducts = Product::where('is_active', true)->count();
+        $lowStockProducts = Product::where('stock', '<=', 10)->count();
+        $outOfStockProducts = Product::where('stock', 0)->count();
+
+        return response()->json([
+            'total_products' => $totalProducts,
+            'active_products' => $activeProducts,
+            'low_stock_products' => $lowStockProducts,
+            'out_of_stock_products' => $outOfStockProducts,
+        ]);
+    }
 }
