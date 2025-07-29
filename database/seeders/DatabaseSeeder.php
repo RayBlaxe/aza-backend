@@ -20,11 +20,12 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
-        // Seed categories, products, and admin users
+        // Seed categories, products, admin users, and superadmin
         $this->call([
             CategorySeeder::class,
             ProductSeeder::class,
             AdminSeeder::class,
+            SuperadminSeeder::class,
         ]);
     }
 }

@@ -15,6 +15,13 @@ class UserManagementController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = User::query();
+        $currentUser = auth('sanctum')->user();
+
+        // If the user is admin (not superadmin), only show customers
+        if ($currentUser->role === 'admin') {
+            $query->where('role', 'customer');
+        }
+        // For superadmin, show all users based on filter or all if no filter
 
         if ($request->has('search')) {
             $search = $request->search;
@@ -24,7 +31,8 @@ class UserManagementController extends Controller
             });
         }
 
-        if ($request->has('role')) {
+        // Only apply role filter if user is superadmin
+        if ($request->has('role') && $currentUser->role === 'superadmin') {
             $query->where('role', $request->role);
         }
 
@@ -120,8 +128,15 @@ class UserManagementController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:customer,admin',
+            'role' => 'required|in:customer,admin,superadmin',
         ]);
+
+        // Only superadmin can create superadmin users
+        if ($request->role === 'superadmin' && auth('sanctum')->user()->role !== 'superadmin') {
+            return response()->json([
+                'error' => 'Only superadmin can create superadmin users',
+            ], 403);
+        }
 
         $user = User::create([
             'name' => $request->name,
@@ -143,8 +158,22 @@ class UserManagementController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
-            'role' => 'required|in:customer,admin',
+            'role' => 'required|in:customer,admin,superadmin',
         ]);
+
+        // Only superadmin can update to superadmin role
+        if ($request->role === 'superadmin' && auth('sanctum')->user()->role !== 'superadmin') {
+            return response()->json([
+                'error' => 'Only superadmin can assign superadmin role',
+            ], 403);
+        }
+
+        // Prevent modifying superadmin users unless you are superadmin
+        if ($user->role === 'superadmin' && auth('sanctum')->user()->role !== 'superadmin') {
+            return response()->json([
+                'error' => 'Only superadmin can modify superadmin users',
+            ], 403);
+        }
 
         $updateData = [
             'name' => $request->name,
@@ -172,6 +201,13 @@ class UserManagementController extends Controller
             ], 422);
         }
 
+        // Prevent deleting superadmin users unless you are superadmin
+        if ($user->role === 'superadmin' && auth('sanctum')->user()->role !== 'superadmin') {
+            return response()->json([
+                'error' => 'Only superadmin can delete superadmin users',
+            ], 403);
+        }
+
         if ($user->orders()->exists()) {
             return response()->json([
                 'error' => 'Cannot delete user with existing orders',
@@ -188,10 +224,17 @@ class UserManagementController extends Controller
     public function updateRole(Request $request, User $user): JsonResponse
     {
         $request->validate([
-            'role' => 'required|in:customer,admin',
+            'role' => 'required|in:customer,admin,superadmin',
         ]);
 
-        if ($user->id === auth('sanctum')->id() && $request->role !== 'admin') {
+        // Only superadmin can change roles to/from superadmin
+        if (($request->role === 'superadmin' || $user->role === 'superadmin') && auth('sanctum')->user()->role !== 'superadmin') {
+            return response()->json([
+                'error' => 'Only superadmin can change superadmin roles',
+            ], 403);
+        }
+
+        if ($user->id === auth('sanctum')->id() && !in_array($request->role, ['admin', 'superadmin'])) {
             return response()->json([
                 'error' => 'Cannot change your own admin role',
             ], 422);

@@ -127,3 +127,61 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Reports
     Route::get('reports/sales', [ReportsController::class, 'getSalesReport']);
 });
+
+// Superadmin routes
+Route::middleware(['auth:sanctum', 'superadmin'])->prefix('superadmin')->group(function () {
+    // Admin Management
+    Route::get('admins', [App\Http\Controllers\Admin\SuperadminController::class, 'getAdmins']);
+    Route::post('admins', [App\Http\Controllers\Admin\SuperadminController::class, 'createAdmin']);
+    Route::get('admins/{admin}', [App\Http\Controllers\Admin\SuperadminController::class, 'showAdmin']);
+    Route::put('admins/{admin}', [App\Http\Controllers\Admin\SuperadminController::class, 'updateAdmin']);
+    Route::delete('admins/{admin}', [App\Http\Controllers\Admin\SuperadminController::class, 'deleteAdmin']);
+    Route::patch('admins/{admin}/toggle-status', [App\Http\Controllers\Admin\SuperadminController::class, 'toggleAdminStatus']);
+    Route::get('admins-stats', [App\Http\Controllers\Admin\SuperadminController::class, 'getAdminStats']);
+    Route::delete('admins/bulk-delete', [App\Http\Controllers\Admin\SuperadminController::class, 'bulkDeleteAdmins']);
+
+    // Enhanced Reports
+    Route::get('reports/detailed-sales', [ReportsController::class, 'getDetailedSalesReport']);
+    
+    // All admin routes are also accessible to superadmin
+    // Dashboard
+    Route::get('stats', [DashboardController::class, 'getStats']);
+    Route::get('recent-orders', [DashboardController::class, 'getRecentOrders']);
+    Route::get('top-products', [DashboardController::class, 'getTopProducts']);
+    Route::get('sales-chart', [DashboardController::class, 'getSalesChart']);
+
+    // Products Management
+    Route::apiResource('products', ProductManagementController::class);
+    Route::get('products-statistics', [ProductManagementController::class, 'getStatistics']);
+    Route::post('products/{product}/toggle-status', [ProductManagementController::class, 'toggleStatus']);
+    Route::post('products/upload-image', [ProductManagementController::class, 'uploadImage']);
+    Route::delete('products/bulk-delete', [ProductManagementController::class, 'bulkDelete']);
+    Route::get('products/export/csv', [ProductManagementController::class, 'exportCsv']);
+
+    // Orders Management
+    Route::get('orders', [OrderManagementController::class, 'index']);
+    Route::get('orders/{order}', [OrderManagementController::class, 'show']);
+    Route::put('orders/{order}/status', [OrderManagementController::class, 'updateStatus']);
+    Route::get('orders/by-status', [OrderManagementController::class, 'getOrdersByStatus']);
+    Route::post('orders/bulk-update-status', [OrderManagementController::class, 'bulkUpdateStatus']);
+    Route::get('orders/export/csv', [OrderManagementController::class, 'exportCsv']);
+
+    // Users Management
+    Route::apiResource('users', UserManagementController::class);
+    Route::put('users/{user}/role', [UserManagementController::class, 'updateRole']);
+    Route::get('users/{user}/orders', [UserManagementController::class, 'getUserOrders']);
+    Route::patch('users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus']);
+    Route::get('customers/stats', [UserManagementController::class, 'getCustomerStats']);
+    Route::delete('users/bulk-delete', [UserManagementController::class, 'bulkDelete']);
+    Route::get('users/export/csv', [UserManagementController::class, 'exportCsv']);
+
+    // Categories Management
+    Route::apiResource('categories', CategoryManagementController::class);
+    Route::post('categories/{category}/toggle-status', [CategoryManagementController::class, 'toggleStatus']);
+    Route::delete('categories/bulk-delete', [CategoryManagementController::class, 'bulkDelete']);
+    Route::get('categories/export/csv', [CategoryManagementController::class, 'exportCsv']);
+    Route::get('categories/statistics', [CategoryManagementController::class, 'getStatistics']);
+
+    // Basic Reports
+    Route::get('reports/sales', [ReportsController::class, 'getSalesReport']);
+});
