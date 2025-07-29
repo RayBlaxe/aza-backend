@@ -47,6 +47,30 @@ class User extends Authenticatable
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = ['status', 'last_login'];
+
+    /**
+     * Get the user's status based on email verification
+     */
+    public function getStatusAttribute(): string
+    {
+        return $this->email_verified_at ? 'active' : 'inactive';
+    }
+
+    /**
+     * Get the user's last login (placeholder - you can implement actual last login tracking)
+     */
+    public function getLastLoginAttribute(): ?string
+    {
+        // This is a placeholder. In a real app, you'd track actual last login times
+        return $this->updated_at?->toISOString();
+    }
+
+    /**
      * Check if user is admin
      */
     public function isAdmin(): bool

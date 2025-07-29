@@ -45,11 +45,14 @@ class UserManagementController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
                 'role' => $user->role,
+                'status' => $user->status,
+                'last_login' => $user->last_login,
                 'email_verified_at' => $user->email_verified_at,
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
-                'orders_count' => $user->orders_count,
+                'order_count' => $user->orders_count,
                 'total_spent' => $user->orders()
                     ->where('payment_status', Order::PAYMENT_STATUS_PAID)
                     ->sum('total_amount'),
@@ -67,10 +70,17 @@ class UserManagementController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'phone' => $user->phone,
             'role' => $user->role,
+            'status' => $user->status,
+            'last_login' => $user->last_login,
             'email_verified_at' => $user->email_verified_at,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
+            'order_count' => $user->orders->count(),
+            'total_spent' => $user->orders
+                ->where('payment_status', Order::PAYMENT_STATUS_PAID)
+                ->sum('total_amount'),
             'statistics' => [
                 'total_orders' => $user->orders->count(),
                 'completed_orders' => $user->orders->where('status', Order::STATUS_DELIVERED)->count(),
@@ -156,7 +166,7 @@ class UserManagementController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
-        if ($user->id === auth()->id()) {
+        if ($user->id === auth('sanctum')->id()) {
             return response()->json([
                 'error' => 'Cannot delete your own account',
             ], 422);
@@ -181,7 +191,7 @@ class UserManagementController extends Controller
             'role' => 'required|in:customer,admin',
         ]);
 
-        if ($user->id === auth()->id() && $request->role !== 'admin') {
+        if ($user->id === auth('sanctum')->id() && $request->role !== 'admin') {
             return response()->json([
                 'error' => 'Cannot change your own admin role',
             ], 422);
@@ -262,7 +272,7 @@ class UserManagementController extends Controller
         $skippedCount = 0;
 
         foreach ($users as $user) {
-            if ($user->id === auth()->id() || $user->orders()->exists()) {
+            if ($user->id === auth('sanctum')->id() || $user->orders()->exists()) {
                 $skippedCount++;
 
                 continue;
@@ -325,6 +335,64 @@ class UserManagementController extends Controller
             'message' => 'Users exported successfully',
             'download_url' => asset('storage/'.$filePath),
             'filename' => $filename,
+        ]);
+    }
+
+    public function getUserOrders(Request $request, User $user): JsonResponse
+    {
+        $query = $user->orders()->with(['orderItems.product']);
+
+        // Add pagination support
+        $perPage = $request->get('per_page', 10);
+        $orders = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+        $orders->getCollection()->transform(function ($order) {
+            return [
+                'id' => $order->id,
+                'order_number' => $order->order_number,
+                'status' => $order->status,
+                'payment_status' => $order->payment_status,
+                'total_amount' => $order->total_amount,
+                'items_count' => $order->orderItems->count(),
+                'created_at' => $order->created_at,
+                'updated_at' => $order->updated_at,
+                'delivery_date' => $order->delivery_date,
+                'items' => $order->orderItems->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'quantity' => $item->quantity,
+                        'price' => $item->price,
+                        'product' => [
+                            'id' => $item->product->id,
+                            'name' => $item->product->name,
+                            'image' => $item->product->image,
+                        ],
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json($orders);
+    }
+
+    public function toggleStatus(User $user): JsonResponse
+    {
+        // Toggle between active and inactive status
+        // Since we don't have a status field in the User model, we'll use email_verified_at
+        if ($user->email_verified_at) {
+            $user->email_verified_at = null;
+            $status = 'inactive';
+        } else {
+            $user->email_verified_at = now();
+            $status = 'active';
+        }
+        
+        $user->save();
+
+        return response()->json([
+            'message' => 'User status updated successfully',
+            'user' => $user,
+            'status' => $status,
         ]);
     }
 }

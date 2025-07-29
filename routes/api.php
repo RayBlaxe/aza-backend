@@ -111,6 +111,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Users Management
     Route::apiResource('users', UserManagementController::class);
     Route::put('users/{user}/role', [UserManagementController::class, 'updateRole']);
+    Route::get('users/{user}/orders', [UserManagementController::class, 'getUserOrders']);
+    Route::patch('users/{user}/toggle-status', [UserManagementController::class, 'toggleStatus']);
     Route::get('customers/stats', [UserManagementController::class, 'getCustomerStats']);
     Route::delete('users/bulk-delete', [UserManagementController::class, 'bulkDelete']);
     Route::get('users/export/csv', [UserManagementController::class, 'exportCsv']);
